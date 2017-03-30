@@ -9,7 +9,8 @@
 import UIKit
 import MapKit
 
-class PhotoMapViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, LocationsViewControllerDelegate {
+class PhotoMapViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, LocationsViewControllerDelegate,
+    MKMapViewDelegate {
 
     // OUTLETS
     @IBOutlet weak var baseMapView: MKMapView!
@@ -26,8 +27,25 @@ class PhotoMapViewController: UIViewController, UIImagePickerControllerDelegate,
         let region = MKCoordinateRegion(center: mapCenter, span: mapSpan)
         
         baseMapView.setRegion(region, animated: true)
+        baseMapView.delegate = self
     }
 
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+        let reuseID = "myAnnotationView"
+        
+        var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseID)
+        if (annotationView == nil) {
+            annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseID)
+            annotationView!.canShowCallout = true
+            annotationView!.leftCalloutAccessoryView = UIImageView(frame: CGRect(x:0, y:0, width: 50, height:50))
+        }
+        
+        let imageView = annotationView?.leftCalloutAccessoryView as! UIImageView
+        imageView.image = pickedImage
+        
+        return annotationView
+    }
+    
     @IBAction func photoButtonClicked(_ sender: Any) {
         let vc = UIImagePickerController()
         vc.delegate = self
@@ -44,7 +62,10 @@ class PhotoMapViewController: UIViewController, UIImagePickerControllerDelegate,
     }
     
     func locationsPickedLocation(controller: LocationsViewController, latitude: NSNumber, longitude: NSNumber) {
-        // TODO
+        let annotation = MKPointAnnotation()
+        let locationCoordinate = CLLocationCoordinate2D(latitude: CLLocationDegrees(latitude), longitude: CLLocationDegrees(longitude))
+        annotation.coordinate = locationCoordinate
+        baseMapView.addAnnotation(annotation)
     }
     
     func imagePickerController(_ picker: UIImagePickerController,
